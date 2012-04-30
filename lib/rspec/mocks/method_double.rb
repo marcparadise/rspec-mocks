@@ -96,6 +96,13 @@ module RSpec
         EOF
       end
 
+      @private
+      def invoke_original_method(*args, &block)
+        if @stashed
+          @object.__send__(stashed_method_name, *args, &block) 
+        end
+      end
+
       # @private
       def restore_original_method
         if @stashed
@@ -121,6 +128,7 @@ module RSpec
       def reset
         reset_nil_expectations_warning
         restore_original_method
+        passthru = false
         clear
       end
 

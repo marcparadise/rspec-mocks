@@ -7,6 +7,8 @@ module RSpec
       attr_writer :expected_received_count, :expected_from, :argument_expectation, :implementation
       protected :expected_received_count=, :expected_from=, :implementation=
       attr_accessor :error_generator
+      attr_accessor :passthru
+
       protected :error_generator, :error_generator=
 
       # @private
@@ -28,6 +30,7 @@ module RSpec
         @args_to_yield_were_cloned = false
         @eval_context = nil
         @implementation = implementation
+        @passthru = false
       end
 
       # @private
@@ -91,6 +94,35 @@ module RSpec
         @consecutive = true if values.size > 1
         @implementation = implementation || build_implementation(values)
       end
+
+      # Tells the object to invoke the original/underlying method 
+      # any time the message is received.
+      # 
+      # This permits a method invocation to be monitored, yet still
+      # allows it to perform its underlying function. 
+      #
+      # @note
+      #   this is compatible with all order, argument, and message-count constraints.
+      #   this is not compatible with #stub!
+      # @example 
+      #
+      #   given: 
+      #     counter.count = def
+      #       @value += 1
+      #       @value
+      #     end
+      #
+      #   then:
+      #     counter.stub(:count).and_passthru
+      #     counter.count # => 1
+      #     counter.count # => 2
+      #     counter.count # => 3
+      #     counter.count # => 4
+      #
+      def and_passthru
+        @passthru = true
+      end
+
 
       # @overload and_raise
       # @overload and_raise(ExceptionClass)

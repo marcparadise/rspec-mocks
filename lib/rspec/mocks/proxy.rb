@@ -114,7 +114,6 @@ module RSpec
       def message_received(message, *args, &block)
         expectation = find_matching_expectation(message, *args)
         stub = find_matching_method_stub(message, *args)
-
         if (stub && expectation && expectation.called_max_times?) || (stub && !expectation)
           expectation.increase_actual_received_count! if expectation && expectation.actual_received_count_matters?
           if expectation = find_almost_matching_expectation(message, *args)
@@ -122,7 +121,9 @@ module RSpec
           end
           stub.invoke(*args, &block)
         elsif expectation
-          expectation.invoke(*args, &block)
+          result = expectation.invoke(*args, &block)
+          result = method_double[message].invoke_original_method(*args, &block) if expectation.passthru
+          result
         elsif expectation = find_almost_matching_expectation(message, *args)
           expectation.advise(*args) if null_object? unless expectation.expected_messages_received?
           raise_unexpected_message_args_error(expectation, *args) unless (has_negative_expectation?(message) or null_object?)
